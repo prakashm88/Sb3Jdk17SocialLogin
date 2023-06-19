@@ -1,12 +1,17 @@
 package com.itechgenie.apps.jdk11.sb3.configs;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -17,10 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @Slf4j
-public class AppAnnotationRegistrar implements BeanPostProcessor {
+public class AppAnnotationRegistrar implements BeanPostProcessor, Ordered {
 
 	@Autowired
 	private ItgWebClientImpl itgWebClientImpl;
+
+	@Override
+	public int getOrder() {
+		return Ordered.HIGHEST_PRECEDENCE;
+	}
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -52,6 +62,23 @@ public class AppAnnotationRegistrar implements BeanPostProcessor {
 			} else {
 				log.info("Not an interface - this cannot happen !!!!");
 				// proxy = // Create CGLIB proxy using the original approach
+				proxy = Enhancer.create(fieldType, new MethodInterceptor() {
+					@Override
+					public Object intercept(Object proxyObj, Method method, Object[] args, MethodProxy methodProxy)
+							throws Throwable {
+						log.info("Inside ItgWebClientRegistrarV3.processField: - method: " + method + " - args: "
+								+ args);
+						// Retrieve annotation attributes
+						String id = annotation.id();
+						String url = annotation.url();
+						String[] headers = annotation.headers();
+
+						log.debug("Inside AppAnnotationRegistrar: id:" + id + " - url: " + url + " - headers: "
+								+ headers);
+
+						return itgWebClientImpl.execute(id, fieldType.getName(), method, annotation, true, args);
+					}
+				});
 			}
 			ReflectionUtils.setField(field, bean, proxy);
 		}
