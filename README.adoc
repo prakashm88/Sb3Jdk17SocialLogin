@@ -1,0 +1,18 @@
+Code    -> Framework (Wrapper - invoke the implementation)   ->    Implementation 
+
+
+
+Rest Client
+Code    -> Framework - @CXPJson (Wrapper - invoke the implementation with AOP - audit)   ->    Implementation using WebClient
+
+Mono<T>
+Flux<T>
+T - Simple class type
+List<T>
+Map<String, T>
+
+
+Redis
+Code    -> Framework - @ClienDataStore (Wrapper - invoke the implementation with AOP - audit)   ->    Implementation using Jedis
+
+

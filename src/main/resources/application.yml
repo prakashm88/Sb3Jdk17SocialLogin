@@ -1,0 +1,41 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          gitlab:
+             
+             authorization-uri: https://gitlab.com/oauth/authorize
+             token-uri: https://gitlab.com/oauth/token
+             #user-info-uri: https://gitlab.com/oauth/userinfo
+             #user-info-uri: https://gitlab.com/api/v4/user
+             jwk-set-uri: https://gitlab.com/oauth/discovery/keys
+             #suser-name-attribute: username
+        registration:
+          github:
+            client-id: Iv1.c9e08cc5d5bbc466
+            client-secret: 6b21b92e403a9add55aa7ed43a02c2724aa88b25
+          gitlab:
+            client-authentication-method: client_secret_post
+            provider: gitlab
+            client-id: 62ff9df0a5c933ab9149ba4f5b91f31fe7d7867cbc877034045b0c0b87ae62e8
+            client-secret: 7ee02d3a6fb2a9df2962d8217474b4b9da127f445d93de12f14ea1e521419146
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:8080/login/oauth2/code/gitlab
+            scope:
+            - read_user
+            - openid
+            - profile
+          google:
+            client-id: google-id
+            client-secret: google-secret-here
+          facebook:
+            client-id: facebook-id
+            client-secret: facebook-secret-here            
+            
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+            
