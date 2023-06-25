@@ -18,12 +18,12 @@ spring:
           gitlab:
             client-authentication-method: client_secret_post
             provider: gitlab
-            client-id: 62ff9df0a5c933ab9149ba4f5b91f31fe7d7867cbc877034045b0c0b87ae62e8
-            client-secret: 7ee02d3a6fb2a9df2962d8217474b4b9da127f445d93de12f14ea1e521419146
+            client-id: d48c1b9e5dc524c1a7a0399977af56cea7804af375181e7c052905b471daefc1
+            client-secret: f33d50c58efe752ecbcb3526ac38023ef4841c9f1b79e64ff828fb248fc7b4b8
             authorization-grant-type: authorization_code
             redirect-uri: http://localhost:8080/login/oauth2/code/gitlab
             scope:
-            - read_user
+            #- read_user
             - openid
             - profile
           google:

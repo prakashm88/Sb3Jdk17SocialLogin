@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.itechgenie.apps.jdk11.sb3.clients.FakeBlogServiceClient;
@@ -13,6 +14,7 @@ import com.itechgenie.apps.jdk11.sb3.clients.FakeUserServiceClient;
 import com.itechgenie.apps.jdk11.sb3.clients.FakeWebClient;
 import com.itechgenie.apps.jdk11.sb3.dtos.FakeBlogDTO;
 import com.itechgenie.apps.jdk11.sb3.dtos.FakeUserDTO;
+import com.itechgenie.apps.jdk11.sb3.services.ItgRedisCacheService;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -22,7 +24,10 @@ import reactor.core.publisher.Mono;
 public class FakeDataServiceImpl {
 
 	@Autowired
-	FakeWebClient fakeWebClient;
+	ItgRedisCacheService cacheService;
+
+	// @Autowired
+	// FakeWebClient fakeWebClient;
 
 	@Autowired
 	@Lazy
@@ -37,7 +42,11 @@ public class FakeDataServiceImpl {
 
 		log.info("Inside getUserById: " + id);
 
-		return fakeWebClient.getUserById(id);
+		Mono<FakeUserDTO> fakeUserDTO = fakeUserServiceClient.getById(id);
+
+		cacheService.storeData("fakeUserDTO:" + id, fakeUserDTO);
+
+		return fakeUserDTO.block();
 	}
 
 	public List<FakeUserDTO> getUsers() {
@@ -47,9 +56,12 @@ public class FakeDataServiceImpl {
 		headers.put("x-canary-env", true);
 
 		FakeUserDTO dt = new FakeUserDTO("1");
-		log.info("Injected bean execution here::" + fakeUserServiceClient.getUsers(dt));
 
-		return fakeWebClient.getUsers();
+		Mono<List<FakeUserDTO>> resp = fakeUserServiceClient.getAllUsers();
+
+		log.info("Injected bean execution here::" + resp);
+
+		return resp.block();
 	}
 
 	public List<FakeBlogDTO> getAllBlogs() {
@@ -64,13 +76,13 @@ public class FakeDataServiceImpl {
 
 		return resp;
 	}
-	
+
 	public Mono<FakeBlogDTO> getAllBlog(String blogId) {
 		log.info("Inside getAllBlog1: ");
- 
+
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("x-canary-env", true);
-		
+
 		Mono<FakeBlogDTO> resp = fakeBlogServiceClient.getBlogsById(headers);
 
 		log.info("Injected bean execution here::" + resp);
