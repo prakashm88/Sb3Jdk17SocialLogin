@@ -11,29 +11,64 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.itechgenie.apps.jdk11.sb3.dtos.FakeBlogDTO;
 import com.itechgenie.apps.jdk11.sb3.dtos.FakeUserDTO;
 import com.itechgenie.apps.jdk11.sb3.services.impl.FakeDataServiceImpl;
 
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Controller
 @RequestMapping("/api")
+@Slf4j
 public class FakeDataController {
 
 	@Autowired
 	private FakeDataServiceImpl dataService;
 
 	@RequestMapping("/users/all")
-	public ResponseEntity<List<FakeUserDTO>> users() {
-
+	public ResponseEntity<Map<String, List<FakeUserDTO>>> users() {
+		log.info("FakeDataController.users");
 		HttpStatus status = HttpStatus.OK;
 
-		List<FakeUserDTO> userList = dataService.getUsers();
+		Map<String, List<FakeUserDTO>> resp = dataService.getAllUsers();
+
+		return ResponseEntity.status(status).body(resp);
+	}
+
+	@RequestMapping("/users/all/direct")
+	public ResponseEntity<Flux<FakeUserDTO>> usersDirect() {
+		log.info("FakeDataController.users");
+		HttpStatus status = HttpStatus.OK;
+
+		Flux<FakeUserDTO> userList = dataService.getUsersDirect();
 
 		return ResponseEntity.status(status).body(userList);
+	}
+
+	@RequestMapping("/users/all/proxy")
+	public ResponseEntity<Flux<FakeUserDTO>> usersProxy() {
+		log.info("FakeDataController.users");
+		HttpStatus status = HttpStatus.OK;
+
+		Flux<FakeUserDTO> userList = dataService.getUsersProxy();
+
+		return ResponseEntity.status(status).body(userList);
+	}
+	
+	@PostMapping("/users/add")
+	public ResponseEntity<FakeUserDTO> addUser(@RequestBody FakeUserDTO fakeUserDTO) {
+		log.info("FakeDataController.addUser");
+		HttpStatus status = HttpStatus.ACCEPTED;
+
+		FakeUserDTO returnUser = dataService.addUser(fakeUserDTO);
+
+		return ResponseEntity.status(status).body(returnUser);
 	}
 
 	@RequestMapping("/users/find/{userId}")
@@ -41,6 +76,14 @@ public class FakeDataController {
 		HttpStatus status = HttpStatus.OK;
 
 		FakeUserDTO userDto = dataService.getUserById(userId);
+		return ResponseEntity.status(status).body(userDto);
+	}
+	
+	@RequestMapping("/users/find/first")
+	public ResponseEntity<FakeUserDTO> firstUser() {
+		HttpStatus status = HttpStatus.OK;
+
+		FakeUserDTO userDto = dataService.getFirstUser();
 		return ResponseEntity.status(status).body(userDto);
 	}
 
