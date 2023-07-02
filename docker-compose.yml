@@ -21,7 +21,7 @@ services:
     ports:
       - "7002:6379"
     volumes:
-      - redis-node-1-data:/data
+      - redis-node-2-data:/data
   redis-node-3:
     image: redis:6.0-alpine
     container_name: redis-node-3
@@ -32,7 +32,7 @@ services:
     ports:
       - "7003:6379"
     volumes:
-      - redis-node-1-data:/data  
+      - redis-node-3-data:/data   
   spring-boot-app:
     image: sb3-jdk17-standalone
     container_name: sb3-jdk17-standalone
@@ -47,7 +47,7 @@ services:
       - 8080:8080
     environment:
       - SPRING_REDIS_ENABLED = false
-      - SPRING_REDIS_HOSTS = redis-node-1:7001,redis-node-1:7002,redis-node-1:7003  
+      - SPRING_REDIS_HOSTS = redis-node-2:7001,redis-node-1:7002,redis-node-3:7003 
 volumes:
   redis-node-1-data:
   redis-node-2-data:
