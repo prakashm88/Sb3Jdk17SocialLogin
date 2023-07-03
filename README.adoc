@@ -16,3 +16,7 @@ Redis
 Code    -> Framework - @ClienDataStore (Wrapper - invoke the implementation with AOP - audit)   ->    Implementation using Jedis
 
 
+Problems to handle
+
+1. WebClient to support Mono<0|1> and Flux<0..n>and Pojos. 
+2. 

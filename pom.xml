@@ -21,8 +21,8 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<java.version>17</java.version>
-		<spring-cloud.version>2022.0.3-SNAPSHOT</spring-cloud.version>
-		<spring-security-oauth2.version>2.3.6.RELEASE</spring-security-oauth2.version>
+		<spring-cloud.version>2022.0.3</spring-cloud.version>
+		<spring-security-oauth2.version>2.5.2.RELEASE</spring-security-oauth2.version>
 	</properties>
 
 	<dependencyManagement>
@@ -205,7 +205,14 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.lettuce</groupId>
+			<artifactId>lettuce-core</artifactId>
+		</dependency>
 
 	</dependencies>
 

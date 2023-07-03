@@ -34,7 +34,8 @@ public class AppAnnotationRegistrar implements BeanPostProcessor, Ordered {
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-		log.debug("Inside postProcessBeforeInitialization - beanName: + " + beanName);
+		// log.debug("Inside postProcessBeforeInitialization - beanName: + " +
+		// beanName);
 		ReflectionUtils.doWithFields(bean.getClass(), field -> processField(field, bean));
 		return bean;
 	}
@@ -47,21 +48,14 @@ public class AppAnnotationRegistrar implements BeanPostProcessor, Ordered {
 			if (fieldType.isInterface()) {
 				proxy = Proxy.newProxyInstance(fieldType.getClassLoader(), new Class[] { fieldType },
 						(proxyObj, method, args) -> {
-							log.info("Inside ItgWebClientRegistrarV3.processField: - method: " + method + " - args: "
+							log.info("Inside AppAnnotationRegistrar.processField: - method: " + method + " - args: "
 									+ args);
 							// Retrieve annotation attributes
 							String id = annotation.id();
-							String url = annotation.url();
-							String[] headers = annotation.headers();
-
-							log.debug("Inside AppAnnotationRegistrar: id:" + id + " - url: " + url + " - headers: "
-									+ headers);
-
-							return itgWebClientImpl.execute(id, fieldType.getName(), method, annotation, true, args);
+							return itgWebClientImpl.execute(id, fieldType.getName(), method, annotation, args);
 						});
 			} else {
 				log.info("Not an interface - this cannot happen !!!!");
-				// proxy = // Create CGLIB proxy using the original approach
 				proxy = Enhancer.create(fieldType, new MethodInterceptor() {
 					@Override
 					public Object intercept(Object proxyObj, Method method, Object[] args, MethodProxy methodProxy)

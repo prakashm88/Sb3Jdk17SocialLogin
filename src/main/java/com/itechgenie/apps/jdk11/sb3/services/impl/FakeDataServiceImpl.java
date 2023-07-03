@@ -13,13 +13,18 @@ import com.itechgenie.apps.jdk11.sb3.clients.FakeUserServiceClient;
 import com.itechgenie.apps.jdk11.sb3.clients.FakeWebClient;
 import com.itechgenie.apps.jdk11.sb3.dtos.FakeBlogDTO;
 import com.itechgenie.apps.jdk11.sb3.dtos.FakeUserDTO;
+import com.itechgenie.apps.jdk11.sb3.services.ItgRedisCacheService;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
 public class FakeDataServiceImpl {
+
+	@Autowired
+	ItgRedisCacheService cacheService;
 
 	@Autowired
 	FakeWebClient fakeWebClient;
@@ -33,24 +38,92 @@ public class FakeDataServiceImpl {
 	@Lazy
 	private FakeUserServiceClient fakeUserServiceClient;
 
+	// Users services starts here
 	public FakeUserDTO getUserById(String id) {
 
 		log.info("Inside getUserById: " + id);
 
-		return fakeWebClient.getUserById(id);
+		Mono<FakeUserDTO> fakeUserDTO = fakeUserServiceClient.getById(id);
+
+		cacheService.storeData("fakeUserDTO:" + id, fakeUserDTO);
+
+		return fakeUserDTO.block();
+	}
+	
+	public FakeUserDTO getFirstUser() {
+
+		log.info("Inside getFirstUser: ");
+
+		Mono<FakeUserDTO> fakeUserDTO = fakeUserServiceClient.getFirstUser();
+
+		cacheService.storeData("fakeUserDTO:", fakeUserDTO);
+
+		return fakeUserDTO.block();
+	}
+	
+	public FakeUserDTO addUser(FakeUserDTO fakeUserDTO) {
+
+		log.info("Inside addUser: " + fakeUserDTO);
+
+		Mono<FakeUserDTO> fakeUserDTOReturned = fakeUserServiceClient.addUser(fakeUserDTO);
+
+		cacheService.storeData("fakeUserDTOReturned:", fakeUserDTOReturned);
+
+		return fakeUserDTOReturned.block();
 	}
 
-	public List<FakeUserDTO> getUsers() {
+	public Flux<FakeUserDTO> getUsersProxy() {
 		log.info("Inside getUsers: ");
 
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("x-canary-env", true);
 
-		FakeUserDTO dt = new FakeUserDTO("1");
-		log.info("Injected bean execution here::" + fakeUserServiceClient.getUsers(dt));
+		Flux<FakeUserDTO> resp1 = fakeUserServiceClient.getUsers();
 
-		return fakeWebClient.getUsers();
+		log.info("Response fakeUserServiceClient getUsers via proxy::" + resp1);
+		
+		return resp1;
 	}
+	
+	public Flux<FakeUserDTO> getUsersDirect() {
+		log.info("Inside getUsers: ");
+
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("x-canary-env", true);
+
+		Flux<FakeUserDTO> resp2 = fakeWebClient.getFluxUsers();
+
+		log.info("Response fakeWebClient getUsers via direct call::" + resp2);
+		return resp2;
+	}
+	
+	public Map<String, List<FakeUserDTO>> getAllUsers() {
+		log.info("Inside getUsers: ");
+
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("x-canary-env", true);
+
+		Flux<FakeUserDTO> resp1 = fakeUserServiceClient.getUsers();
+		Flux<FakeUserDTO> resp2 = fakeWebClient.getFluxUsers();
+
+		log.info("Response fakeWebClient getUsers::" + resp2);
+		log.info("Response fakeUserServiceClient getUsers::" + resp1);
+		
+		
+		List<FakeUserDTO> resp1list = resp1.collectList().block();
+		List<FakeUserDTO> resp2list = resp2.collectList().block();
+		
+		Map<String, List<FakeUserDTO>> respMap = new HashMap<>();
+		respMap.put("direct", resp2list);
+		respMap.put("proxy", resp1list);
+		
+		log.info("Response combined getUsers::" + respMap);
+		
+		return respMap;
+	}
+
+
+	// Blogs services starts here
 
 	public List<FakeBlogDTO> getAllBlogs() {
 		log.info("Inside getUsers: ");
@@ -64,13 +137,13 @@ public class FakeDataServiceImpl {
 
 		return resp;
 	}
-	
+
 	public Mono<FakeBlogDTO> getAllBlog(String blogId) {
 		log.info("Inside getAllBlog1: ");
- 
+
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("x-canary-env", true);
-		
+
 		Mono<FakeBlogDTO> resp = fakeBlogServiceClient.getBlogsById(headers);
 
 		log.info("Injected bean execution here::" + resp);
