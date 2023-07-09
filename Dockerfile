@@ -3,7 +3,7 @@ FROM maven:3.9.2-amazoncorretto-17 AS builder
 LABEL maintainer="admin@itechgenie.com"
 WORKDIR /application
 COPY pom.xml .
-RUN mvn dependency:go-offline
+#RUN mvn dependency:go-offline
 COPY src ./src
 RUN mvn clean package -DskipTests
 COPY target/*.jar application.jar

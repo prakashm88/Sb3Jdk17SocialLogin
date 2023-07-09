@@ -1,39 +1,46 @@
 package com.itechgenie.apps.jdk11.sb3.configs;
 
-import java.util.List;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.stereotype.Component;
 
-@Component
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Configuration
 @ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = true)
-@ConfigurationProperties(prefix = "spring.redis")
+@ConfigurationProperties(prefix = "spring.data.redis.cluster")
+@Data
 public class AppRedisConfig {
 
-	@Value("${password:}")
-	private String redisPassword;
+	//@Value("${password:}")
+	private String password;
 
-	@Value("${cluster.nodes:}")
-	private List<String> redisClusterNodes;
+	//@Value("${nodes:}")
+	private String[] nodes;
 
-	@Value("${cluster.max-redirects:3}")
-	private int redisClusterMaxRedirects;
+	//@Value("${cluster.max-redirects:3}")
+	private int maxRedirects;
 
 	@Bean
-	public JedisConnectionFactory jedisConnectionFactory() {
+	JedisConnectionFactory jedisConnectionFactory() {
 
-		RedisClusterConfiguration clusterConfig = new RedisClusterConfiguration(redisClusterNodes);
-		clusterConfig.setPassword(RedisPassword.of(redisPassword));
-		clusterConfig.setMaxRedirects(redisClusterMaxRedirects);
+		log.info("Starting Redis cluster config with nodes list: " + nodes);
+		
+		RedisClusterConfiguration clusterConfig = new RedisClusterConfiguration(Arrays.asList(nodes));
+		clusterConfig.setPassword(RedisPassword.of(password));
+		clusterConfig.setMaxRedirects(maxRedirects);
 
 		JedisClientConfiguration clientConfig = JedisClientConfiguration.builder().usePooling().build();
 
@@ -41,8 +48,8 @@ public class AppRedisConfig {
 
 	}
 
-	@Bean
-	public RedisTemplate<String, Object> redisTemplate() {
+    @Bean
+    RedisTemplate<String, Object> redisTemplate() {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(jedisConnectionFactory());
 		redisTemplate.setKeySerializer(new StringRedisSerializer());

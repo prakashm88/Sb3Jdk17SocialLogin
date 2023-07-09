@@ -1,0 +1,97 @@
+version: "1.1"
+services:
+  redis-node-1:
+    image: redis:6.0-alpine
+    container_name: redis-node-1
+#    environment:
+#      CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379
+#    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-config-file", "/etc/redis/nodes.conf", "--cluster-node-timeout", "5000"]
+#    command: redis-server --cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    ports:
+      - "7001:6379"
+    volumes:
+      - redis-node-1-data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf      
+    networks:
+      redis_cluster_net:
+        ipv4_address: 173.18.0.10      
+  redis-node-2:
+    image: redis:6.0-alpine
+    container_name: redis-node-2
+#    environment:
+#      CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379
+#    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-config-file", "/etc/redis/nodes.conf", "--cluster-node-timeout", "5000"]
+#    command: redis-server --cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes  --slaveof redis-node-1 7001
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    ports:
+      - "7002:6379"
+    volumes:
+      - redis-node-2-data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf      
+    depends_on:
+      - redis-node-1
+    networks:
+      redis_cluster_net:
+        ipv4_address: 173.18.0.2      
+  redis-node-3:
+    image: redis:6.0-alpine
+    container_name: redis-node-3
+#    environment:
+#      CLUSTER_NODES: redis-node-1:6379,redis-node-2:6379,redis-node-3:6379
+#    command: ["redis-server", "--cluster-enabled", "yes", "--cluster-config-file", "/etc/redis/nodes.conf", "--cluster-node-timeout", "5000"]
+#    command: redis-server --cluster-enabled yes --cluster-node-timeout 5000 --appendonly yes  --slaveof redis-node-1 7001
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    ports:
+      - "7003:6379"
+    volumes:
+      - redis-node-3-data:/data   
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf      
+    depends_on:
+      - redis-node-1
+    networks:
+      redis_cluster_net:
+        ipv4_address: 173.18.0.3     
+         
+  redis_commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis_web
+    environment:
+      REDIS_HOSTS: "local:redis-node-1:6379,local:redis-node-2:6379,local:redis-node-3:6379"
+    ports:
+      - "5000:8081"
+    depends_on:
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - cluster_initiator
+    networks:
+      redis_cluster_net:
+        ipv4_address: 173.18.0.9
+        
+  cluster_initiator:
+    container_name: cluster_initiator
+    build:
+      context: redis
+      dockerfile: Dockerfile
+    tty: true
+    depends_on:
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+    networks:
+      redis_cluster_net:
+        ipv4_address: 173.18.0.8
+          
+volumes:
+  redis-node-1-data:
+  redis-node-2-data:
+  redis-node-3-data:      
+  
+networks:
+  redis_cluster_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 173.18.0.0/16  
