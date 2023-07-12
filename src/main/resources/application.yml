@@ -1,3 +1,7 @@
+itg:
+  webclient:
+    debug: false
+
 redis:
   enabled:  true
 
@@ -6,7 +10,7 @@ spring:
     redis:
       cluster:
         nodes: localhost:7001, localhost:7002, localhost:7003
-        password: ""
+        password: "bitnami"
         max-redirects: 3
   security:
     oauth2:

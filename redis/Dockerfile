@@ -1,9 +1,9 @@
-FROM redis:latest
+FROM redis:6.0-alpine
 
 
-COPY ./entrypoint.sh /amr2-entrypoint.sh
-RUN chmod 755 /amr2-entrypoint.sh
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
 
-CMD ["bash"]
+#ENTRYPOINT ["/amr2-entrypoint.sh"]
 
-ENTRYPOINT ["/amr2-entrypoint.sh"]
+ENTRYPOINT ["sh", "/entrypoint.sh"]

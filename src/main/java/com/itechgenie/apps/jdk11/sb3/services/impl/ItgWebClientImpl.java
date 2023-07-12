@@ -10,9 +10,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -30,10 +29,15 @@ import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
 
 import com.itechgenie.apps.jdk11.sb3.annotations.ItgWebClient;
+import com.itechgenie.apps.jdk11.sb3.configs.AppWebClientConfig;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import jakarta.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,20 +45,43 @@ import reactor.netty.http.client.HttpClient;
 
 @Component
 @Slf4j
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ItgWebClientImpl {
 
-	HttpClient httpClient = HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
-			.responseTimeout(Duration.ofMillis(5000)).wiretap(true)
-			.doOnConnected(conn -> conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS))
-					.addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
+	@Autowired
+	AppWebClientConfig appWebClientConfig;
 
-	WebClient webClient = WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient)) // customize
-																											// the
-																											// timeout
-																											// options
-																											// here
-			.baseUrl("https://jsonplaceholder.typicode.com").defaultCookie("cookie-name", "cookie-value")
-			.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+	public ItgWebClientImpl(AppWebClientConfig config) {
+		this.appWebClientConfig = config;
+	}
+
+	HttpClient httpClient;
+
+	WebClient webClient;
+	
+	@PostConstruct
+	public void loadConfigs() {
+		
+		if (httpClient == null) {
+			httpClient = HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+					.responseTimeout(Duration.ofMillis(5000)).wiretap(appWebClientConfig.isDebug())
+					.doOnConnected(conn -> conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS))
+							.addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
+		}
+
+		if (webClient == null) {
+			webClient = WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient)) // customize
+					// the
+					// timeout
+					// options
+					// here
+					.baseUrl("https://jsonplaceholder.typicode.com").defaultCookie("cookie-name", "cookie-value")
+					.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+		}
+		
+	}
 
 	public <T> T executeWebClient(String id, String uri, HttpMethod httpMethod,
 			MultiValueMap<String, String> headersMap, Object body, Type elementType, Class<T> returnType) {
@@ -237,50 +264,45 @@ public class ItgWebClientImpl {
 		return uri;
 	}
 
-	 public static Map<String, String> extractPathVariableValues(Method method, Object[] args) {
-	        Map<String, String> pathVariables = new HashMap<>();
+	public static Map<String, String> extractPathVariableValues(Method method, Object[] args) {
+		Map<String, String> pathVariables = new HashMap<>();
 
-	        Parameter[] parameters = method.getParameters();
-	        for (int i = 0; i < parameters.length; i++) {
-	            Parameter parameter = parameters[i];
-	            PathVariable pathVariableAnnotation = parameter.getAnnotation(PathVariable.class);
-	            if (pathVariableAnnotation != null) {
-	                String pathVariableName = pathVariableAnnotation.value();
-	                String pathVariableValue = args[i].toString();
-	                pathVariables.put(pathVariableName, pathVariableValue);
-	            }
-	        }
-
-	        return pathVariables;
-	    }
-	
-	/* public static Map<String, String> extractPathVariableValues(Method method, String url) {
-		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-		Map<String, String> pathVariableValues = new HashMap<>();
-
-		String pathPattern = url.replaceAll("\\{\\w+\\}", "(\\\\w+)");
-		log.debug("pathPattern: " + pathPattern);
-		Pattern pattern = Pattern.compile(pathPattern);
-
-		Matcher matcher = pattern.matcher(url);
-		if (matcher.matches()) {
-			log.debug("Inside matcher :");
-			for (int i = 1; i <= matcher.groupCount(); i++) {
-				String pathVariableName = matcher.group(i);
-				log.debug("Inside matcher - pathVariableName: " +  pathVariableName);
-				Annotation[] annotations = parameterAnnotations[i - 1];
-				for (Annotation annotation : annotations) {
-					if (annotation instanceof PathVariable) {
-						PathVariable pathVariable = (PathVariable) annotation;
-						String pathVariableValue = "${" + pathVariableName + "}";
-						pathVariableValues.put(pathVariable.value(), pathVariableValue);
-					}
-				}
+		Parameter[] parameters = method.getParameters();
+		for (int i = 0; i < parameters.length; i++) {
+			Parameter parameter = parameters[i];
+			PathVariable pathVariableAnnotation = parameter.getAnnotation(PathVariable.class);
+			if (pathVariableAnnotation != null) {
+				String pathVariableName = pathVariableAnnotation.value();
+				String pathVariableValue = args[i].toString();
+				pathVariables.put(pathVariableName, pathVariableValue);
 			}
 		}
 
-		return pathVariableValues;
-	}  */
+		return pathVariables;
+	}
+
+	/*
+	 * public static Map<String, String> extractPathVariableValues(Method method,
+	 * String url) { Annotation[][] parameterAnnotations =
+	 * method.getParameterAnnotations(); Map<String, String> pathVariableValues =
+	 * new HashMap<>();
+	 * 
+	 * String pathPattern = url.replaceAll("\\{\\w+\\}", "(\\\\w+)");
+	 * log.debug("pathPattern: " + pathPattern); Pattern pattern =
+	 * Pattern.compile(pathPattern);
+	 * 
+	 * Matcher matcher = pattern.matcher(url); if (matcher.matches()) {
+	 * log.debug("Inside matcher :"); for (int i = 1; i <= matcher.groupCount();
+	 * i++) { String pathVariableName = matcher.group(i);
+	 * log.debug("Inside matcher - pathVariableName: " + pathVariableName);
+	 * Annotation[] annotations = parameterAnnotations[i - 1]; for (Annotation
+	 * annotation : annotations) { if (annotation instanceof PathVariable) {
+	 * PathVariable pathVariable = (PathVariable) annotation; String
+	 * pathVariableValue = "${" + pathVariableName + "}";
+	 * pathVariableValues.put(pathVariable.value(), pathVariableValue); } } } }
+	 * 
+	 * return pathVariableValues; }
+	 */
 
 	public static String replacePathVariables(String url, Map<String, String> pathVariables) {
 		for (Map.Entry<String, String> entry : pathVariables.entrySet()) {

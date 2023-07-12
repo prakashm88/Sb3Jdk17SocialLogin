@@ -11,6 +11,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.itechgenie.apps.jdk11.sb3.clients.FakeUserServiceClient;
+import com.itechgenie.apps.jdk11.sb3.configs.AppWebClientConfig;
 import com.itechgenie.apps.jdk11.sb3.dtos.FakeUserDTO;
 import com.itechgenie.apps.jdk11.sb3.services.impl.ItgWebClientImpl;
 
@@ -22,8 +23,14 @@ public class AppTests {
 	@Test
 	public void contextLoads() throws NoSuchMethodException, SecurityException {
 
-		ItgWebClientImpl itgWebClientImpl = new ItgWebClientImpl();
-
+		
+		AppWebClientConfig appWebClientConfig = new AppWebClientConfig();
+		appWebClientConfig.setDebug(true);
+		
+		
+		ItgWebClientImpl itgWebClientImpl = new ItgWebClientImpl(appWebClientConfig);
+		itgWebClientImpl.loadConfigs();
+		
 		MultiValueMap<String, String> headersMap = new LinkedMultiValueMap<>();
 
 		// Class<Flux<FakeUserDTO>> returnType = (Class<Flux<FakeUserDTO>>) (Class<?>)

@@ -116,6 +116,14 @@ public class FakeDataServiceImpl {
 		Map<String, List<FakeUserDTO>> respMap = new HashMap<>();
 		respMap.put("direct", resp2list);
 		respMap.put("proxy", resp1list);
+		try {
+			log.info("Setting up data inside cache! ");
+			cacheService.storeData("ALL_USERS", respMap);
+			log.info("Setting up data inside cache!: -- done ");
+		} catch (Exception e) {
+			log.error("Exception in storing data in redis: " + e.getMessage(), e);
+		}
+		
 		
 		log.info("Response combined getUsers::" + respMap);
 		

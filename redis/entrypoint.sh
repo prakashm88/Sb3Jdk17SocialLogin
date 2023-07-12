@@ -1,18 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 
-# Using the redis-cli tool available as default in the Redis base image
-# we need to create the cluster so they can coordinate with each other
-# which key slots they need to hold per shard
+REDIS_IPS="173.18.0.10:6379 173.18.0.2:6379 173.18.0.3:6379 173.18.0.4:6379 173.18.0.5:6379 173.18.0.6:6379"
 
-# wait a little so we give some time for the Redis containers
-# to spin up and be available on the network
-sleep 5
-# redis-cli doesn't support hostnames, we must match the
-# container IP addresses from our docker-compose configuration.
-# `--cluster-replicas 1` Will make sure that every master node will have its replica node
-echo "yes" | redis-cli --cluster create \
-  173.18.0.10:6379 \
-  173.18.0.2:6379 \
-  173.18.0.3:6379 \
-  --cluster-replicas 1
-echo "🚀 Redis cluster ready."
+# Function to check if Redis node is running
+function check_redis_node() {
+    redis-cli -c -h "$1" ping > /dev/null 2>&1
+    return $?
+}
+
+# Function to check if Redis cluster is already set up
+function check_redis_cluster() {
+    for ip in $REDIS_IPS; do
+        check_redis_node "${ip%:*}"
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+    done
+    return 0
+}
+
+# Check the status of Redis cluster
+echo "Checking Redis cluster status..."
+check_redis_cluster
+
+# Check if Redis cluster is set up
+if [ $? -eq 0 ]; then
+    echo "Redis cluster is already set up."
+else
+    echo "Redis cluster is not set up. Setting up the cluster..."
+
+    # Create Redis cluster
+    echo "yes" | redis-cli --cluster create "$REDIS_IPS" --cluster-replicas 1
+
+    echo "Redis cluster ready!"
+fi

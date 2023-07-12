@@ -4,6 +4,7 @@ LABEL maintainer="admin@itechgenie.com"
 WORKDIR /application
 COPY pom.xml .
 #RUN mvn dependency:go-offline
+RUN mvn dependency:resolve
 COPY src ./src
 RUN mvn clean package -DskipTests
 COPY target/*.jar application.jar
