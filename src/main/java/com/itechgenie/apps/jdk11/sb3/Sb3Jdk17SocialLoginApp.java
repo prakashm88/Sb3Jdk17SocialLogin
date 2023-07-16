@@ -4,14 +4,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.web.reactive.config.EnableWebFlux;
 
 import lombok.extern.slf4j.Slf4j;
 
 @ComponentScan
 @SpringBootApplication
 //@EnableAspectJAutoProxy
-@EnableAspectJAutoProxy(proxyTargetClass = true)
+//@EnableAspectJAutoProxy(proxyTargetClass = true)
 @Slf4j
+//@EnableWebFlux
 public class Sb3Jdk17SocialLoginApp {
 
 	public static void main(String[] args) {

@@ -17,6 +17,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -60,10 +63,17 @@ public class ItgWebClientImpl {
 	HttpClient httpClient;
 
 	WebClient webClient;
-	
+
+	public Authentication getUserInfo() {
+		Authentication auth = ReactiveSecurityContextHolder.getContext().map(SecurityContext::getAuthentication)
+				.block();
+		log.debug("Obtained userAuthentication: " + auth);
+		return auth;
+	}
+
 	@PostConstruct
 	public void loadConfigs() {
-		
+
 		if (httpClient == null) {
 			httpClient = HttpClient.create().option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
 					.responseTimeout(Duration.ofMillis(5000)).wiretap(appWebClientConfig.isDebug())
@@ -80,13 +90,17 @@ public class ItgWebClientImpl {
 					.baseUrl("https://jsonplaceholder.typicode.com").defaultCookie("cookie-name", "cookie-value")
 					.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
 		}
-		
+
 	}
 
 	public <T> T executeWebClient(String id, String uri, HttpMethod httpMethod,
 			MultiValueMap<String, String> headersMap, Object body, Type elementType, Class<T> returnType) {
 		log.info(id + " - uri: " + uri + " - headersMap: " + headersMap + " - body: " + body + " - elementType: "
 				+ elementType + " - returnType: " + returnType);
+
+		Authentication auth = getUserInfo();
+
+		log.info("Obtained auth: " + auth);
 
 		WebClient.RequestBodySpec requestSpec = webClient.method(httpMethod).uri(uri)
 				.headers(headers -> headers.addAll(headersMap));

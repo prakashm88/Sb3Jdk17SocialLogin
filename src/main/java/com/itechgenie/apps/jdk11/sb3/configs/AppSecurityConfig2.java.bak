@@ -4,9 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.SecurityFilterChain;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,19 +13,22 @@ import lombok.extern.slf4j.Slf4j;
 //@EnableWebSecurity
 @Slf4j
 @EnableWebFluxSecurity
-public class AppSecurityConfig {
+public class AppSecurityConfig2 {
 
 	
 	
 	@Bean
-	SecurityWebFilterChain configure(ServerHttpSecurity http) {
-		http.authorizeExchange((exchange) -> exchange
-				.pathMatchers("/", "/public/**", "/**login**", "/error", "/webjars/**", "/actuator/**", "/v3/api-docs/**", "swagger-ui.html").permitAll()
-				//.pathMatchers("/api**").authenticated()
-				.anyExchange().authenticated()
-				)
-				.oauth2Login(Customizer.withDefaults());
-		return http.build();
+	SecurityFilterChain filterChain(ServerHttpSecurity  http) throws Exception {
+		
+		
+		  http
+          .authorizeExchange((exchanges) -> exchanges
+              .anyExchange().authenticated()
+          )
+          .httpBasic(withDefaults());                                                     
+      return http.build();
+		
+	 
 	}
 	
 /* 	@Bean

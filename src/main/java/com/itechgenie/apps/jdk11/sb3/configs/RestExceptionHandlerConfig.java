@@ -1,5 +1,8 @@
 package com.itechgenie.apps.jdk11.sb3.configs;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RestExceptionHandlerConfig {
 
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
 	private ResponseEntity<ItgGeneralException> buildResponseEntity(ItgGeneralException exp) {
 		String status = exp.getStatus();
 		HttpStatusCode statusCode = HttpStatusCode.valueOf(500);
-		if(status != null)
+		if (status != null)
 			HttpStatusCode.valueOf(Integer.valueOf(status));
 		return ResponseEntity.status(statusCode).contentType(MediaType.APPLICATION_JSON).body(exp);
 	}
@@ -26,8 +31,13 @@ public class RestExceptionHandlerConfig {
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ItgGeneralException> generalException(Exception ex, Model model) {
 		log.debug("handling exception::" + ex);
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		ItgGeneralException exp = new ItgGeneralException();
 		exp.setMethod("Some method here !");
+		exp.setTimestamp(sdf.format(timestamp));
+		exp.setMessage(ex.getMessage());
+		exp.setStatus("fail");
+		exp.setDebugMessage(ex.getCause().getMessage());
 		model.addAttribute(exp);
 		return this.buildResponseEntity(exp);
 	}
