@@ -129,6 +129,42 @@ public class FakeDataServiceImpl {
 		
 		return respMap;
 	}
+	
+	public Mono<Map<String, List<FakeUserDTO>>> getAllUsersNonBlocking() {
+		log.info("Inside getUsers: ");
+
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("x-canary-env", true);
+
+		Flux<FakeUserDTO> resp1 = fakeUserServiceClient.getUsers();
+		Flux<FakeUserDTO> resp2 = fakeWebClient.getFluxUsers();
+
+		log.info("Response fakeWebClient getUsers::" + resp2);
+		log.info("Response fakeUserServiceClient getUsers::" + resp1);
+		
+		
+		Mono< Map<String, List<FakeUserDTO>>> resultMap = Flux.zip(resp1.collectList(), resp2.collectList())
+        .map(tuple -> {
+            Map<String, List<FakeUserDTO>> _resultMap = new HashMap<>();
+            _resultMap.put("resp1", tuple.getT1());
+            _resultMap.put("resp2", tuple.getT2());
+            return _resultMap;
+        })
+        .single();
+		
+		try {
+			log.info("Setting up data inside cache! ");
+			cacheService.storeData("ALL_USERS", resultMap);
+			log.info("Setting up data inside cache!: -- done ");
+		} catch (Exception e) {
+			log.error("Exception in storing data in redis: " + e.getMessage(), e);
+		}
+		
+		
+		log.info("Response combined getUsers::" + resultMap);
+		
+		return resultMap;
+	}
 
 
 	// Blogs services starts here

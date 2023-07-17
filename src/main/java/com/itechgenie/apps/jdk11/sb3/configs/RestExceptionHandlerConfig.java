@@ -21,6 +21,7 @@ public class RestExceptionHandlerConfig {
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
 	private ResponseEntity<ItgGeneralException> buildResponseEntity(ItgGeneralException exp) {
+		log.error("handling exception::" + exp.getMessage(), exp);
 		String status = exp.getStatus();
 		HttpStatusCode statusCode = HttpStatusCode.valueOf(500);
 		if (status != null)
@@ -30,14 +31,15 @@ public class RestExceptionHandlerConfig {
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ItgGeneralException> generalException(Exception ex, Model model) {
-		log.debug("handling exception::" + ex);
+		log.error("handling exception::" + ex.getMessage(), ex);
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		ItgGeneralException exp = new ItgGeneralException();
 		exp.setMethod("Some method here !");
 		exp.setTimestamp(sdf.format(timestamp));
 		exp.setMessage(ex.getMessage());
 		exp.setStatus("fail");
-		exp.setDebugMessage(ex.getCause().getMessage());
+		if(ex.getCause() != null)
+			exp.setDebugMessage(ex.getCause().getMessage());
 		model.addAttribute(exp);
 		return this.buildResponseEntity(exp);
 	}

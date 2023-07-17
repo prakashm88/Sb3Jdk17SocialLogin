@@ -64,9 +64,8 @@ public class ItgWebClientImpl {
 
 	WebClient webClient;
 
-	public Authentication getUserInfo() {
-		Authentication auth = ReactiveSecurityContextHolder.getContext().map(SecurityContext::getAuthentication)
-				.block();
+	public Mono<Authentication> getUserInfo() {
+		Mono<Authentication> auth = ReactiveSecurityContextHolder.getContext().map(SecurityContext::getAuthentication);
 		log.debug("Obtained userAuthentication: " + auth);
 		return auth;
 	}
@@ -97,10 +96,12 @@ public class ItgWebClientImpl {
 			MultiValueMap<String, String> headersMap, Object body, Type elementType, Class<T> returnType) {
 		log.info(id + " - uri: " + uri + " - headersMap: " + headersMap + " - body: " + body + " - elementType: "
 				+ elementType + " - returnType: " + returnType);
-
-		Authentication auth = getUserInfo();
-
-		log.info("Obtained auth: " + auth);
+		try {
+			Mono<Authentication> auth =  getUserInfo();
+			log.info("Obtained auth: " + auth);
+		} catch (Exception e) {
+			log.error("Exception in executeWebClient: " + e.getMessage(), e);
+		}
 
 		WebClient.RequestBodySpec requestSpec = webClient.method(httpMethod).uri(uri)
 				.headers(headers -> headers.addAll(headersMap));

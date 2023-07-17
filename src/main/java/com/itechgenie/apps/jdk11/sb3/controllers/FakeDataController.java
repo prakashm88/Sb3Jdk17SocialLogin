@@ -40,6 +40,16 @@ public class FakeDataController {
 
 		return ResponseEntity.status(status).body(resp);
 	}
+	
+	@RequestMapping("/users/all/nonblocking")
+	public ResponseEntity<Mono<Map<String, List<FakeUserDTO>>>> getAllUsersNonBlocking() {
+		log.info("FakeDataController.users");
+		HttpStatus status = HttpStatus.OK;
+
+		Mono<Map<String, List<FakeUserDTO>>> resp = dataService.getAllUsersNonBlocking();
+
+		return ResponseEntity.status(status).body(resp);
+	}
 
 	@RequestMapping("/users/all/direct")
 	public ResponseEntity<Flux<FakeUserDTO>> usersDirect() {
