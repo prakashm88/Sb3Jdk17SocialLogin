@@ -4,25 +4,29 @@ import java.net.InetAddress;
 import java.sql.Date;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpCookie;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itechgenie.apps.jdk11.sb3.dtos.FakeUserDTO;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
@@ -45,8 +49,8 @@ public class AppRestController {
 	}
 
 	@GetMapping("/env/headers")
-	public Map<String, Object> getHeaders(@RequestParam(value = "env", defaultValue = "NonePassed") String env,
-			@RequestHeader ServerHttpRequest request) {
+	public ResponseEntity<Map<String, Object>> getHeaders(@RequestParam(value = "env", defaultValue = "NonePassed") String env,
+			 ServerHttpRequest request) {
 
 		Map<String, Object> returnMap = new HashMap<String, Object>();
 
@@ -90,8 +94,9 @@ public class AppRestController {
 		} catch (Exception e) {
 			returnMap.put("exception", e.getMessage());
 		}
+		HttpStatus status = HttpStatus.OK;
 
-		return returnMap;
+		return ResponseEntity.status(status).body(returnMap);
 	}
 
 }
