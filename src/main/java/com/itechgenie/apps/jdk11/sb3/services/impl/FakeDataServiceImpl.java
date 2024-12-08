@@ -1,10 +1,13 @@
 package com.itechgenie.apps.jdk11.sb3.services.impl;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.audit.AuditEvent;
+import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +40,10 @@ public class FakeDataServiceImpl {
 	@Autowired
 	@Lazy
 	private FakeUserServiceClient fakeUserServiceClient;
+	
+	
+	@Autowired
+	AuditEventRepository auditEventRepo;
 
 	// Users services starts here
 	public FakeUserDTO getUserById(String id) {
@@ -135,6 +142,7 @@ public class FakeDataServiceImpl {
 
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("x-canary-env", true);
+		headers.put("dt", Instant.now());
 
 		Flux<FakeUserDTO> resp1 = fakeUserServiceClient.getUsers();
 		Flux<FakeUserDTO> resp2 = fakeWebClient.getFluxUsers();
@@ -160,6 +168,7 @@ public class FakeDataServiceImpl {
 			log.error("Exception in storing data in redis: " + e.getMessage(), e);
 		}
 		
+		auditEventRepo.add(new AuditEvent("prakash", "SERVICE_REQ", headers));
 		
 		log.info("Response combined getUsers::" + resultMap);
 		

@@ -3,6 +3,7 @@ package com.itechgenie.apps.jdk11.sb3.dummy;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +29,12 @@ public class DummyRedisCacheServiceImpl implements ItgRedisCacheService {
 	public <T> T retrieveData(String key, Class<T> responseType) {
 		log.debug("Key: " + key + " - responseType: " + responseType);
 		return (T) dummyRedisImplMap.get(key);
+	}
+
+	@Override
+	public void addEvent(AuditEvent fakeAuditEvent) {
+		// TODO Auto-generated method stub
+		dummyRedisImplMap.put("event", fakeAuditEvent) ;
 	}
 
 }
